@@ -31,21 +31,31 @@ function initNavbar() {
 
   // Mobile Menu Toggle
   if (mobileMenuBtn && navList) {
-    mobileMenuBtn.addEventListener('click', () => {
-      const isOpen = navList.style.display === 'flex';
-      if (isOpen) {
-        navList.style.display = '';
-      } else {
-        navList.style.display = 'flex';
-        navList.style.flexDirection = 'column';
-        navList.style.position = 'absolute';
-        navList.style.top = '100%';
-        navList.style.left = '0';
-        navList.style.right = '0';
-        navList.style.background = '#ffffff';
-        navList.style.padding = '1.5rem';
-        navList.style.borderBottom = '1px solid #e6e1d6';
-        navList.style.boxShadow = '0 10px 30px rgba(0,0,0,0.08)';
+    mobileMenuBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = navList.classList.toggle('mobile-open');
+      mobileMenuBtn.innerHTML = isOpen ? '✕' : '☰';
+      mobileMenuBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      document.body.style.overflow = isOpen ? 'hidden' : '';
+    });
+
+    // Close mobile menu when clicking outside
+    document.addEventListener('click', (e) => {
+      if (navList.classList.contains('mobile-open') && !navList.contains(e.target) && e.target !== mobileMenuBtn) {
+        navList.classList.remove('mobile-open');
+        mobileMenuBtn.innerHTML = '☰';
+        mobileMenuBtn.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+      }
+    });
+
+    // Close mobile menu on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && navList.classList.contains('mobile-open')) {
+        navList.classList.remove('mobile-open');
+        mobileMenuBtn.innerHTML = '☰';
+        mobileMenuBtn.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
       }
     });
   }
@@ -87,24 +97,46 @@ function initNavbar() {
         // Move brown underline indicator immediately
         setActiveLink(targetId);
 
+        // Check if mobile menu is currently open
+        const wasMobileOpen = navList && navList.classList.contains('mobile-open');
+
         // Close mobile dropdown if open
-        if (window.innerWidth <= 1024 && navList && navList.style.display === 'flex') {
-          navList.style.display = '';
+        if (wasMobileOpen) {
+          navList.classList.remove('mobile-open');
+          if (mobileMenuBtn) {
+            mobileMenuBtn.innerHTML = '☰';
+            mobileMenuBtn.setAttribute('aria-expanded', 'false');
+          }
+          document.body.style.overflow = '';
         }
 
-        // Calculate smooth scroll offset with header height
-        const headerHeight = header ? header.offsetHeight : 70;
-        const targetTop = targetSection.getBoundingClientRect().top + window.pageYOffset - headerHeight;
+        // Perform scroll — delay slightly if mobile menu was open
+        // so the browser can re-layout after removing overflow:hidden
+        const doScroll = () => {
+          const headerHeight = header ? header.offsetHeight : 70;
+          const targetTop = targetSection.getBoundingClientRect().top + window.pageYOffset - headerHeight;
 
-        window.scrollTo({
-          top: targetTop,
-          behavior: 'smooth'
-        });
+          window.scrollTo({
+            top: targetTop,
+            behavior: 'smooth'
+          });
 
-        // Resume ScrollSpy after smooth scroll finishes
-        scrollTimeout = setTimeout(() => {
-          isClickScrolling = false;
-        }, 750);
+          // Resume ScrollSpy after smooth scroll finishes
+          scrollTimeout = setTimeout(() => {
+            isClickScrolling = false;
+          }, 750);
+        };
+
+        if (wasMobileOpen) {
+          // Wait for mobile menu close animation & body re-layout
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              doScroll();
+            });
+          });
+        } else {
+          doScroll();
+        }
       }
     });
   });
