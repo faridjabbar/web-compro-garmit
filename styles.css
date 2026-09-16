@@ -60,12 +60,12 @@ html {
   color: var(--text-dark);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 body {
   line-height: 1.65;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 img {
