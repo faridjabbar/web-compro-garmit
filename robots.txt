@@ -1,0 +1,5 @@
+# robots.txt for https://pemapa.id/
+User-agent: *
+Allow: /
+
+Sitemap: https://pemapa.id/sitemap.xml
